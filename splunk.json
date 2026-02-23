@@ -1,0 +1,188 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Splunk Search API",
+    "version": "1.0.0",
+    "description": "Simple Splunk REST API spec for running searches via HTTP basic authentication and retrieving results."
+  },
+  "servers": [
+    {
+      "url": "https://your-splunk-searchhead:8089",
+      "description": "Splunk management port"
+    }
+  ],
+  "security": [
+    {
+      "basicAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "basicAuth": {
+        "type": "http",
+        "scheme": "basic"
+      }
+    },
+    "schemas": {
+      "SearchJobRequest": {
+        "type": "object",
+        "required": [
+          "search"
+        ],
+        "properties": {
+          "search": {
+            "type": "string",
+            "description": "SPL search string, must start with `search` or `|`.",
+            "example": "search index=main sourcetype=access_combined status=500 | stats count by host"
+          },
+          "exec_mode": {
+            "type": "string",
+            "description": "Execution mode (blocking, oneshot, normal).",
+            "example": "blocking"
+          },
+          "output_mode": {
+            "type": "string",
+            "description": "Response format.",
+            "example": "json"
+          }
+        }
+      },
+      "SearchJobCreated": {
+        "type": "object",
+        "properties": {
+          "sid": {
+            "type": "string",
+            "description": "Search job ID."
+          }
+        }
+      },
+      "SearchResults": {
+        "type": "object",
+        "description": "Results as returned by Splunk in JSON output_mode.",
+        "additionalProperties": true
+      }
+    }
+  },
+  "paths": {
+    "/services/search/jobs": {
+      "post": {
+        "summary": "Create a search job",
+        "description": "Submits an SPL search to Splunk and starts a search job using basic authentication.",
+        "security": [
+          {
+            "basicAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchJobRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Search job created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchJobCreated"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed"
+          }
+        }
+      }
+    },
+    "/services/search/v2/jobs": {
+      "post": {
+        "summary": "Create a search job (v2)",
+        "description": "Preferred v2 endpoint for creating a search job.",
+        "security": [
+          {
+            "basicAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchJobRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Search job created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchJobCreated"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/search/v2/jobs/{sid}/results": {
+      "get": {
+        "summary": "Get search results",
+        "description": "Retrieves results for a completed search job using its SID.",
+        "security": [
+          {
+            "basicAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search job ID returned from POST."
+          },
+          {
+            "in": "query",
+            "name": "output_mode",
+            "schema": {
+              "type": "string",
+              "default": "json",
+              "enum": [
+                "json",
+                "xml",
+                "csv"
+              ]
+            },
+            "description": "Output format for results."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResults"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Job not found"
+          }
+        }
+      }
+    }
+  }
+}
