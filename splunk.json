@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Splunk Search API",
-    "version": "1.0.0",
-    "description": "Simple Splunk REST API spec for running searches via HTTP basic authentication and retrieving results."
+    "version": "1.0.1",
+    "description": "Splunk REST API spec for running searches via HTTP Basic authentication and retrieving results."
   },
   "servers": [
     {
@@ -11,16 +11,12 @@
       "description": "Splunk management port"
     }
   ],
-  "security": [
-    {
-      "basicAuth": []
-    }
-  ],
   "components": {
     "securitySchemes": {
       "basicAuth": {
         "type": "http",
-        "scheme": "basic"
+        "scheme": "basic",
+        "description": "HTTP Basic authentication with Splunk username and password."
       }
     },
     "schemas": {
@@ -63,11 +59,16 @@
       }
     }
   },
+  "security": [
+    {
+      "basicAuth": []
+    }
+  ],
   "paths": {
-    "/services/search/jobs": {
+    "/services/search/v2/jobs": {
       "post": {
-        "summary": "Create a search job",
-        "description": "Submits an SPL search to Splunk and starts a search job using basic authentication.",
+        "summary": "Create a search job (v2)",
+        "description": "Submits an SPL search to Splunk and starts a search job using HTTP Basic authentication.",
         "security": [
           {
             "basicAuth": []
@@ -96,39 +97,6 @@
           },
           "401": {
             "description": "Authentication failed"
-          }
-        }
-      }
-    },
-    "/services/search/v2/jobs": {
-      "post": {
-        "summary": "Create a search job (v2)",
-        "description": "Preferred v2 endpoint for creating a search job.",
-        "security": [
-          {
-            "basicAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "$ref": "#/components/schemas/SearchJobRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Search job created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SearchJobCreated"
-                }
-              }
-            }
           }
         }
       }
